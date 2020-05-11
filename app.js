@@ -4,8 +4,18 @@ const createError = require('http-errors');
 const logger = require('morgan');
 const sassMiddleware = require('node-sass-middleware');
 const serveFavicon = require('serve-favicon');
-
+const expressSession = require('express-session');
+const connectMongo = require('connect-mongo');
+const mongoose = require('mongoose');
 const indexRouter = require('./routes/index');
+const authenticationRouter = require('./routes/authentication');
+const userArea = require('./routes/user-area');
+const mongoStore = connectMongo(expressSession);
+
+// Middleware
+const deserializeUser = require('./middleware/deserialize-user');
+const UsertoLocals = require('./middleware/user-to-locals');
+const routeGuard = require('./middleware/route-guard');
 
 const app = express();
 
@@ -22,13 +32,39 @@ app.use(
   sassMiddleware({
     src: join(__dirname, 'public'),
     dest: join(__dirname, 'public'),
-    outputStyle: process.env.NODE_ENV === 'development' ? 'nested' : 'compressed',
+    outputStyle:
+      process.env.NODE_ENV === 'development' ? 'nested' : 'compressed',
     force: process.env.NODE_ENV === 'development',
-    sourceMap: true
+    sourceMap: true,
   })
 );
 
+app.use(
+  expressSession({
+    secret: 'abc', // ???
+    resave: true,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 15 * 24 * 60 * 60 * 1000,
+      //secure: true // when running on a server just save cookies if its a https
+      //serverOnly // Something related with just run at server, but i'm not sure
+    },
+    store: new mongoStore({
+      mongooseConnection: mongoose.connection,
+      ttl: 60 * 60, // Seconds to reset connection
+    }),
+  })
+);
+
+app.use(deserializeUser);
+
+app.use(UsertoLocals);
+
 app.use('/', indexRouter);
+app.use('/authentication', authenticationRouter);
+app.use('/user-area', userArea);
+
+
 
 // Catch missing routes and forward to error handler
 app.use((req, res, next) => {

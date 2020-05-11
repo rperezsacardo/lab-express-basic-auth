@@ -1,10 +1,27 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Lab Express Basic Authentication</title>
-    <link rel='stylesheet' href='/styles/style.css' />
-  </head>
-  <body>
-    {{{body}}}
-  </body>
+
+<head>
+  <title>Lab Express Basic Authentication</title>
+  <link rel='stylesheet' href='/styles/style.css' />
+</head>
+
+<body>
+  <nav>
+    <div>
+      {{#if user}} <h4>User: {{user.name}}</h4> {{/if}}
+      <a href="/">Home</a>
+      <a href="/authentication/sign-up">Sign up</a>
+      <a href="/authentication/sign-in">Sign In</a>
+      <a href="/user-area/main">Main</a>
+      <a href="/user-area/private">Private</a>
+      <a href="/user-area/profile/{{user._id}}">My Profile</a>
+      <form action="/authentication/sign-out" method="POST">
+        <button>Sign Out</button>
+      </form>
+    </div>
+  </nav>
+  {{{body}}}
+</body>
+
 </html>
